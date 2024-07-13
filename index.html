@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="This is a new take on the painting Black Squre by the artist Kazimir
+    Malevich"
+    />
+    <title>Black Square 2.0</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+      .pointer-cursor {
+        cursor: pointer;
+      }
+      #video-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1;
+      }
+      .title {
+        position: absolute;
+        font-size: 3rem;
+        font-family: "Times New Roman", Times, serif;
+        color: rgb(71, 66, 66);
+        top: 20px;
+        left: 20px;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="title">Black Square 2.0</h1>
+    <video id="video-background" autoplay playsinline muted></video>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(function (stream) {
+          const videoElement = document.getElementById("video-background");
+          videoElement.srcObject = stream;
+
+          videoElement.onloadedmetadata = function (e) {
+            videoElement.play();
+          };
+        })
+        .catch(function (err) {
+          console.error("Failed to get user media", err);
+        });
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const geometry = new THREE.BoxGeometry(3, 3, 0.001);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+      });
+      const flatCube = new THREE.Mesh(geometry, material);
+      scene.add(flatCube);
+
+      flatCube.position.set(0, 0, 0);
+
+      camera.position.set(0, 0, 5);
+      camera.lookAt(flatCube.position);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.screenSpacePanning = false;
+
+      controls.enableZoom = false;
+
+      controls.minAzimuthAngle = -Infinity;
+      controls.maxAzimuthAngle = Infinity;
+
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI;
+      controls.enableRotate = true;
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      function onMouseMove(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObject(flatCube);
+
+        if (intersects.length > 0) {
+          renderer.domElement.classList.add("pointer-cursor");
+        } else {
+          renderer.domElement.classList.remove("pointer-cursor");
+        }
+      }
+
+      window.addEventListener("mousemove", onMouseMove, false);
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        controls.update();
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
