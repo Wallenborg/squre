@@ -47,7 +47,11 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
       navigator.mediaDevices
-        .getUserMedia({ video: true })
+        .getUserMedia({
+          video: {
+            facingMode: { exact: "environment" },
+          },
+        })
         .then(function (stream) {
           const videoElement = document.getElementById("video-background");
           videoElement.srcObject = stream;
@@ -57,7 +61,31 @@
           };
         })
         .catch(function (err) {
-          console.error("Failed to get user media", err);
+          console.error(
+            "Failed to get user media with environment facingMode, trying user facingMode",
+            err
+          );
+
+          navigator.mediaDevices
+            .getUserMedia({
+              video: {
+                facingMode: "user",
+              },
+            })
+            .then(function (stream) {
+              const videoElement = document.getElementById("video-background");
+              videoElement.srcObject = stream;
+
+              videoElement.onloadedmetadata = function (e) {
+                videoElement.play();
+              };
+            })
+            .catch(function (err) {
+              console.error(
+                "Failed to get user media with user facingMode",
+                err
+              );
+            });
         });
 
       const scene = new THREE.Scene();
